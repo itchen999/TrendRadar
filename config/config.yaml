@@ -83,6 +83,22 @@ rss:
       url: "https://www.ft.com/?format=rss"
       enabled: false   # FT RSS 有時不穩定，先關閉，確認可用再開
 
+    # ── 政治人物追蹤（Google News 搜尋 RSS）
+    - id: "gnews-trump"
+      name: "Google News: Trump"
+      url: "https://news.google.com/rss/search?q=Trump&hl=en-US&gl=US&ceid=US:en"
+      max_age_days: 1
+
+    - id: "gnews-xi-jinping"
+      name: "Google News: Xi Jinping"
+      url: "https://news.google.com/rss/search?q=Xi+Jinping&hl=en-US&gl=US&ceid=US:en"
+      max_age_days: 1
+
+    - id: "gnews-trump-xi"
+      name: "Google News: Trump Xi Trade"
+      url: "https://news.google.com/rss/search?q=Trump+Xi+trade+tariff&hl=en-US&gl=US&ceid=US:en"
+      max_age_days: 1
+
     # ── 預留：你的 Blog RSS（取消 # 填入 URL）
     # - id: "my-blog-1"
     #   name: "我的 Blog 1"
