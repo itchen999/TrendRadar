@@ -22,8 +22,18 @@ platforms:
   sources:
     - id: "wallstreetcn-hot"
       name: "華爾街見聞 熱門"
+    - id: "wallstreetcn-news"
+      name: "華爾街見聞 最新"
     - id: "cls-hot"
       name: "財聯社 熱門"
+    - id: "cls-telegraph"
+      name: "財聯社 電報"
+    - id: "jin10"
+      name: "金十數據"
+    - id: "gelonghui"
+      name: "格隆匯"
+    - id: "fastbull"
+      name: "快牛財經"
     - id: "thepaper"
       name: "澎湃新聞"
     - id: "zhihu"
@@ -202,7 +212,26 @@ ai_translation:
     rss: true           # RSS 英文標題自動翻譯
     standalone: true
 
-# ── 11. 進階設定 ──────────────────────────────────────────────
+# ── 11. 同花順 iFinD 財經新聞 ─────────────────────────────────
+# 直接抓取同花順公開財經新聞，整合進 RSS 管道推送
+ifind:
+  enabled: true
+  timeout: 15
+  request_interval: 1500   # 毫秒，請求間隔
+  sources:
+    - id: "ifind-quick"
+      name: "同花順 7*24快訊"
+      type: "quick"         # 7*24 滾動即時快訊
+      enabled: true
+      max_items: 50
+
+    - id: "ifind-news"
+      name: "同花順 財經要聞"
+      type: "news"          # 財經要聞頭條
+      enabled: true
+      max_items: 30
+
+# ── 12. 進階設定 ──────────────────────────────────────────────
 advanced:
   debug: false
   crawler:

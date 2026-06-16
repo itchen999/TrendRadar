@@ -840,6 +840,107 @@ async def trigger_crawl(
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
+# ==================== 同花順 iFinD 財經新聞工具 ====================
+
+@mcp.tool
+async def get_ifind_news(
+    source: str = "all",
+    limit: int = 30,
+) -> str:
+    """
+    即時抓取同花順 iFinD 最新財經新聞頭條
+
+    直接連線同花順公開新聞頁面，回傳最新財經快訊與要聞，
+    無需等待爬蟲排程，適合需要即時資訊的場景。
+
+    Args:
+        source: 資料來源，可選：
+            - "all"   : 全部來源（預設）
+            - "quick" : 7*24 滾動即時快訊
+            - "news"  : 財經要聞頭條
+        limit: 每個來源最多回傳幾條，預設 30，最大 100
+
+    Returns:
+        JSON 格式的財經新聞列表，每條包含：
+        - title       : 新聞標題
+        - source_name : 來源名稱（如「同花順 7*24快訊」）
+        - url         : 原文連結
+        - published_at: 發布時間（ISO 8601）
+
+    Example:
+        get_ifind_news(source="quick", limit=20)
+        → 回傳最新 20 條 7*24 快訊
+    """
+    import asyncio
+
+    limit = max(1, min(limit, 100))
+
+    try:
+        from trendradar.crawler.ifind import IFindFetcher, IFindSourceConfig
+
+        # 根據 source 參數決定要啟用哪些來源
+        source_configs = []
+        if source in ("all", "quick"):
+            source_configs.append(IFindSourceConfig(
+                id="ifind-quick",
+                name="同花順 7*24快訊",
+                type="quick",
+                enabled=True,
+                max_items=limit,
+            ))
+        if source in ("all", "news"):
+            source_configs.append(IFindSourceConfig(
+                id="ifind-news",
+                name="同花順 財經要聞",
+                type="news",
+                enabled=True,
+                max_items=limit,
+            ))
+
+        if not source_configs:
+            return json.dumps({
+                "success": False,
+                "error": {
+                    "code": "INVALID_SOURCE",
+                    "message": f"無效的 source 參數：{source}，可選：all / quick / news"
+                }
+            }, ensure_ascii=False, indent=2)
+
+        fetcher = IFindFetcher(sources=source_configs, timeout=15)
+
+        rss_items = await asyncio.to_thread(fetcher.fetch_all)
+
+        news_list = [
+            {
+                "title": item.title,
+                "source_name": item.feed_name,
+                "url": item.url,
+                "published_at": item.published_at,
+            }
+            for item in rss_items
+            if item.title
+        ]
+
+        return json.dumps({
+            "success": True,
+            "summary": {
+                "description": "同花順 iFinD 即時財經新聞",
+                "source": source,
+                "total": len(news_list),
+            },
+            "data": news_list,
+        }, ensure_ascii=False, indent=2)
+
+    except Exception as e:
+        return json.dumps({
+            "success": False,
+            "error": {
+                "code": "FETCH_ERROR",
+                "message": str(e),
+            }
+        }, ensure_ascii=False, indent=2)
+
+
 # ==================== 存储同步工具 ====================
 
 @mcp.tool

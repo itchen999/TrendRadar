@@ -397,6 +397,31 @@ def _load_storage_config(config_data: Dict) -> Dict:
     }
 
 
+def _load_ifind_config(config_data: Dict) -> Dict:
+    """加载同花順 iFinD 财经新闻配置"""
+    ifind = config_data.get("ifind", {})
+    advanced = config_data.get("advanced", {})
+    crawler_cfg = advanced.get("crawler", {})
+
+    sources = []
+    for src in ifind.get("sources", []):
+        sources.append({
+            "id": src.get("id", ""),
+            "name": src.get("name", ""),
+            "type": src.get("type", "quick"),
+            "enabled": src.get("enabled", True),
+            "max_items": src.get("max_items", 50),
+        })
+
+    return {
+        "ENABLED": ifind.get("enabled", False),
+        "TIMEOUT": ifind.get("timeout", 15),
+        "REQUEST_INTERVAL": ifind.get("request_interval", 1500),
+        "USE_PROXY": crawler_cfg.get("use_proxy", False),
+        "SOURCES": sources,
+    }
+
+
 def _load_webhook_config(config_data: Dict) -> Dict:
     """加载 Webhook 配置"""
     notification = config_data.get("notification", {})
@@ -580,6 +605,9 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 
     # RSS 配置
     config["RSS"] = _load_rss_config(config_data)
+
+    # 同花順 iFinD 财经新闻配置
+    config["IFIND"] = _load_ifind_config(config_data)
 
     # AI 模型共享配置
     config["AI"] = _load_ai_config(config_data)

@@ -119,6 +119,21 @@ class AppContext:
         return self.rss_config.get("FEEDS", [])
 
     @property
+    def ifind_config(self) -> Dict:
+        """获取同花順 iFinD 配置"""
+        return self.config.get("IFIND", {})
+
+    @property
+    def ifind_enabled(self) -> bool:
+        """iFinD 是否启用"""
+        return self.ifind_config.get("ENABLED", False)
+
+    @property
+    def ifind_sources(self) -> List[Dict]:
+        """获取 iFinD 来源列表"""
+        return self.ifind_config.get("SOURCES", [])
+
+    @property
     def display_mode(self) -> str:
         """获取显示模式 (keyword | platform)"""
         return self.config.get("DISPLAY_MODE", "keyword")

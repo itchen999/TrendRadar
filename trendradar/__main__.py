@@ -1186,6 +1186,65 @@ class NewsAnalyzer:
             print(f"[RSS] 抓取失败: {e}")
             return None, None, None, set()
 
+    def _crawl_ifind_data(self) -> List[Dict]:
+        """
+        抓取同花順 iFinD 财经新闻，转换为与 RSS 条目相同的字典格式。
+
+        Returns:
+            list of dict，格式与 _convert_rss_items_to_list 返回值相同；
+            未启用或失败时返回空列表。
+        """
+        if not self.ctx.ifind_enabled:
+            return []
+
+        ifind_sources = self.ctx.ifind_sources
+        if not ifind_sources:
+            print("[iFinD] 未配置任何来源")
+            return []
+
+        try:
+            from trendradar.crawler.ifind import IFindFetcher, IFindSourceConfig
+
+            sources = [
+                IFindSourceConfig(
+                    id=s.get("id", ""),
+                    name=s.get("name", ""),
+                    type=s.get("type", "quick"),
+                    enabled=s.get("enabled", True),
+                    max_items=s.get("max_items", 50),
+                )
+                for s in ifind_sources
+                if s.get("id")
+            ]
+
+            ifind_cfg = self.ctx.ifind_config
+            fetcher = IFindFetcher(
+                sources=sources,
+                timeout=ifind_cfg.get("TIMEOUT", 15),
+                request_interval=ifind_cfg.get("REQUEST_INTERVAL", 1500),
+                proxy_url=self.proxy_url if ifind_cfg.get("USE_PROXY") else None,
+            )
+
+            rss_items = fetcher.fetch_all()
+
+            # 转换为管道通用的字典格式
+            result = []
+            for item in rss_items:
+                result.append({
+                    "title": item.title,
+                    "feed_id": item.feed_id,
+                    "feed_name": item.feed_name,
+                    "url": item.url,
+                    "published_at": item.published_at,
+                    "summary": item.summary,
+                    "author": item.author,
+                })
+            return result
+
+        except Exception as e:
+            print(f"[iFinD] 抓取失败: {e}")
+            return []
+
     def _process_rss_data_by_mode(self, rss_data) -> Tuple[Optional[List[Dict]], Optional[List[Dict]], Optional[List[Dict]], set]:
         """
         按报告模式处理 RSS 数据，返回与热榜相同格式的统计结构
@@ -1717,6 +1776,20 @@ class NewsAnalyzer:
 
             # 抓取 RSS 数据（如果启用），返回统计条目、新增条目和原始条目
             rss_items, rss_new_items, raw_rss_items, rss_new_urls = self._crawl_rss_data()
+
+            # 抓取同花順 iFinD 财经新闻（如果启用），合并进 raw_rss_items
+            ifind_items = self._crawl_ifind_data()
+            if ifind_items:
+                if raw_rss_items:
+                    raw_rss_items = list(raw_rss_items) + ifind_items
+                else:
+                    raw_rss_items = ifind_items
+                # 同步更新 rss_items（用于统计推送）
+                if rss_items:
+                    rss_items = list(rss_items) + ifind_items
+                else:
+                    rss_items = ifind_items
+                print(f"[iFinD] 已将 {len(ifind_items)} 条财经新闻合并进推送管道")
 
             # 执行模式策略，传递 RSS 数据用于合并推送
             self._execute_mode_strategy(
