@@ -72,8 +72,8 @@ pip install python-dateutil
 
 ## 4. 使用指南
 
-> 注：本目录为「加载兼容性验证」用途，`scripts/fetch_hotspot.py` 为占位说明文件，
-> 真实脚本依赖 RedFox API，请在审阅后再从上游仓库引入。
+> 注：`scripts/fetch_hotspot.py` 已从上游引入并通过安全审阅。运行需配置 `REDFOX_API_KEY`。
+> 本地加固：① 恢复默认 SSL 证书校验（上游关闭了校验，有中间人风险）；② `mktemp`→`mkstemp` 避免竞态。
 > 上游：https://github.com/redfox-data/redfox-community/tree/main/skills/trending-hub
 
 ### 基础使用
